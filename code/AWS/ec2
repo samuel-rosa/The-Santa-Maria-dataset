@@ -1,0 +1,158 @@
+################################################################################
+# Setting Up the Amazon EC2 command line interface (CLI) tools
+
+# The following steps have to be accomplished in the local computer (and then
+# on the instance?). The references are:
+# https://help.ubuntu.com/community/EC2StartersGuide
+# http://docs.aws.amazon.com/AWSEC2/latest/CommandLineReference/ec2-cli-get-set-up.html
+
+# Download and install the CLI tools
+wget http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip
+sudo mkdir /usr/local/ec2
+sudo unzip ec2-api-tools.zip -d /usr/local/ec2
+
+# Set up environment variables in shell profile. Check the references to see
+# the info that has to be included in  ~/.bashrc.
+gedit ~/.bashrc          # edit file
+source ~/.bashrc         # apply changes
+ec2dim -o self -o amazon # check if changes were applied
+
+################################################################################
+# INSTANTIATE AN IMAGE
+# Check Ubuntu AMIs at http://uec-images.ubuntu.com/. AMIs are updated every 
+# day. So, check for the currently available AMIs. Provided the environment 
+# variables have been set up in shell profile, the following command can be used
+# to instantiate an image (remember that the working directory must be the one 
+# with your identification and security files):
+# Ex.: ec2-run-instances ami-xxxxx -k ${EC2_KEYPAIR} -t <instance type>
+cd ~/.ec2
+ec2dim ami-41534320 # describe image features
+ec2run ami-41534320 -t m4.4xlarge -k ${EC2_KEYPAIR} -b "/dev/sda1=snap-b92673fb:30:true:standard"
+ec2din
+
+# Authorize network access to the ssh port for the default security group
+# It appears that this command has to be used only once.
+# ec2-authorize default -p 22
+
+# Modify the instance ----------------------------------------------------------
+# Available Ubuntu AMIs are designed for general purpose tasks. Suppose we need
+# to configure a memory optimized instance (8 vCPUs, 61 GiB of memory). We can
+# modify the instance using the following:
+ec2din                             # get instance id
+ec2stop i-75f725ac                 # stop instance (wait!!!)
+ec2minatt i-75f725ac -t c3.8xlarge # modify instance (32 vCPUs, 60 GiB memory)
+ec2start i-75f725ac                # start instance
+
+# See more information on how to modify an instance at:
+# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html
+# http://docs.aws.amazon.com/AWSEC2/latest/CommandLineReference/ApiReference-cmd-ModifyInstanceAttribute.html
+
+# Log in and set up the instance -----------------------------------------------
+# We are going to access the instance using ssh. All we need to log in is to
+# point to the private key pair and indicate the external host name. Once logged
+# in, we can start setting up the instance to start working. This includes, for
+# example, installing R.
+# To avoid the ssh connection to be closed, run on client
+echo 'ServerAliveInterval 60' | sudo tee -a /etc/ssh/ssh_config
+echo 'ServerAliveCountMax 1200' | sudo tee -a /etc/ssh/ssh_config
+echo 'TCPKeepAlive yes' | sudo tee -a /etc/ssh/ssh_config
+
+# http://askubuntu.com/questions/127369/how-to-prevent-write-failed-broken-pipe-on-ssh-connection#142430
+# http://unix.stackexchange.com/questions/2010/what-does-the-broken-pipe-message-mean-in-an-ssh-session/2013#2013
+# to restart ssh run: 
+sudo /etc/init.d/ssh restart # client
+
+
+
+ec2din # get public DNS
+ssh -i ~/.ec2/ec2.pem ubuntu@ec2-52-33-184-255.us-west-2.compute.amazonaws.com
+echo 'ClientAliveInterval 60' | sudo tee -a /etc/ssh/ssh_config
+echo 'KeepAlive yes' | sudo tee -a /etc/ssh/ssh_config
+sudo service ssh restart
+cat /proc/meminfo # memory
+lscpu # cpu
+df -h # hd
+
+# Create a user, home directory and set password
+sudo useradd asr
+sudo mkdir /home/asr
+sudo passwd asr
+sudo chmod -R 0777 /home/asr
+
+# Update and install software
+sudo add-apt-repository ppa:marutter/rrutter
+sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install r-base r-base-dev gdal-bin libproj-dev libgdal-dev libgeos-dev # spatial
+sudo apt-get install libopenmpi-dev mpi openmpi-bin # mpi
+sudo apt-get install libcurl4-openssl-dev libxml2-dev gdebi-core libapparmor1 language-pack-en-base
+
+sudo apt-get install default-jre default-jdk # Java
+
+sudo ufw allow 8787 # allow access to port 8787
+
+#sudo locale-gen en_US en_US.UTF-8
+#sudo dpkg-reconfigure locales
+#export LC_ALL="C"
+#export LC_ALL="en_US.UTF-8"
+
+# Change to a writeable directory
+# Download & Install RStudio Server
+# https://www.rstudio.com/products/rstudio/download-server/
+cd /tmp
+wget http://download2.rstudio.org/rstudio-server-0.99.489-amd64.deb
+sudo gdebi rstudio-server-0.99.489-amd64.deb
+sudo restart rstudio-server
+sudo rstudio-server verify-installation
+sudo netstat -lanp | grep 8787
+
+# Connect to server using the web browser
+http://ec2-52-33-184-255.us-west-2.compute.amazonaws.com:8787
+
+
+ssh -N -L localhost:8787:localhost:8787 -i ~/.ec2/ec2.pem ubuntu@ec2-52-32-31-57.us-west-2.compute.amazonaws.com
+http://localhost:8787/
+
+
+# Prepare R
+R
+install.packages(c("spcosa", "snow", "spsann"), repos = 'http://cran.rstudio.com/', dependencies = TRUE)
+install.packages("spcosa", repos = 'http://cran.rstudio.com/', dependencies = TRUE)
+setwd("~/home/asr")
+
+
+
+# Run R in batch mode
+Rscript script.r
+
+# Log out and terminate instance -----------------------------------------------
+exit               # log out
+ec2din             # get instance id
+ec2kill i-99f42940 # terminate instance
+
+
+# Set working directory
+$ cd .ec2
+
+################################################################################
+# FILE UPLOAD TO / DOWNLOAD FROM AWS
+#
+# Your working directory does not have to be the directory containing the 
+# EC2 identification and security files. It is enough to point to that 
+# directory. The server identification can be retrieved using 
+# 'ec2-describe-instances'. The following command can be used to upload a folder
+# to the AWS server.
+# Ex.: scp -r -i yourkeypair.pem <source folder> <server>:<destination folder>
+
+scp -i ~/.ec2/ec2.pem 
+  ~/projects/dnos-sm-rs/data/AWS/2ndArticle_osc_ec2.rda 
+  ubuntu@ec2-52-33-184-255.us-west-2.compute.amazonaws.com:~/asr
+
+# Downloading from the server is done with the same command, but setting the
+# server as the source folder.
+
+scp -r -i ~/.ec2/ec2.pem 
+  ubuntu@ec2-52-24-216-246.us-west-2.compute.amazonaws.com:~/rdata 
+  ~/projects/dnos-sm-rs/data/AWS
+

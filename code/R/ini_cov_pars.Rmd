@@ -1,0 +1,435 @@
+---
+title: "Best guess of initial covariance parameters"
+author: "Alessandro Samuel Rosa"
+date: "30 November 2015"
+output: html_document
+---
+
+```{r}
+rm(list = ls())
+require(pedometrics)
+require(georob)
+```
+
+for four soil variables contained in the meuse dataset
+(cadmium, copper, zinc, and lead)
+
+# Estimator of the sample variogram
+
+Our first test regards the selection of the best estimator for computing the
+sample variogram. Four options are evaluated:
+
+1. Genton's robust Qn-estimator,
+2. Dowd's robust MAD-estimator,
+3. non-robust method-of-moments estimator, and
+4. robust Cressie-Hawkins estimator.
+
+Evaluation involves comparing the guesses made using each estimator of the
+sample variogram. We also evaluate the effect of the number of point-pairs in 
+the first lag-distance class (19 or 164). This is possible because the
+number of point-pairs in the second lag-distance class is 19 (the number of 
+point-pairs in the first lag-distance class is equal to zero). We then fit
+geostatistical models using the ***georob***-package to evaluate the
+performance of each estimator of the sample variogram. Our goal is to compare 
+the guesses with the estimated variogram model parameters to see if the 
+estimator of the sample variogram affects the estimated variogram model 
+parameters.
+
+## meuse dataset
+
+```{r}
+require(sp)
+data(meuse)
+```
+
+### npairs = 19
+
+We observed that the guessed ranges and sills are approximately the same for all
+four estimators, except for two variables (zinc and lead), where "matheron" 
+guessed shorter ranges. The main difference is in the guess of the nugget 
+variance, and thus the partial sill. In general, "matheron" guesses the nugget
+variance to be very high compared to the other three estimator of the sample
+variogram. Estimators "qn", "mad", and "ch" seem to produce closer guesses for
+the nugget variance. Overall, "qn" produces the "better looking"" sample
+variogram, specially close to the origin, what indicates its robustness to
+outlying observations. However, all robust estimators of the sample variogram
+failed one or more times in producing a "good looking" sample variogram.
+
+Estimated covariance parameters for zinc and lead are considerably different
+from the guesses made with "matheron". However, the estimated variogram model
+parameters are very close for all four estimators of the sample variogram. The
+observed fluctuations do not evidence any trend, and (pehaps) can be regarded 
+as a result of fluctuations in the optimizer. As such, all three robust 
+estimators of the variogram can be considered satisfactory.
+
+The guesses of the nugget and total variance (sill) were higher using "matheron"
+for three variables (cadmium, zinc, and lead) and using "mad" for one variable
+(lead).
+
+Best estimator
+
+Variable | Range      | Partial sill | Nugget 
+-------- | ---------- | ------------ | ----------
+chromium | "pooled"   | "mad"        | "matheron"
+copper   | "pooled"   | "matheron"   | "matheron"
+zinc     | "matheron" | "mad"        | "mad"
+lead     | "pooled"   | "ch"         | "mad"
+
+Worse estimator
+
+Variable | Range      | Partial sill | Nugget 
+-------- | ---------- | ------------ | ----------
+chromium | "mad"      | "ch"         | "qn"
+copper   | "matheron" | "mad"        | "mad"
+zinc     | "mad"      | "qn"         | "matheron"
+lead     | "qn"       | "matheron"   | "matheron"
+
+### npairs = 164
+
+We observe again that the guessed ranges and sills are
+approximately the same for all four estimators, the main difference among
+estimators being in the guess of the nugget variance. The major difference from
+the previous analysis is that the guess of the nugget variance made by 
+"matheron" is much higher. This is more pronounced when the data has a longer
+tail. Compared to "matheron", the other three estimators produce similar 
+guesses of the nugget variance. This suggests that, as the number of 
+point-pairs in the first lag-distance class increases, robust estimators produce
+very similar sample variograms. In fact, the relative shape of the sample
+variogram estimated using "matheron" is similar to those 
+produced using robust estimators. However, because "matheron" is a non-robust
+estimator, the presence of outlying observations results in an overestimation
+of the (nugget) variance, while robust estimators can underesitmate the (nugget)
+variance. This was already observed by Lark (2000) [A comparison of some robust
+estimators of the variogram for use in soil survey. European Journal of Soil
+Science, v. 51, p. 137-157.].
+
+Best estimator
+
+Variable | Range      | Partial sill | Nugget 
+-------- | ---------- | ------------ | ----------
+chromium | "matheron" | "matheron"   | "matheron"
+copper   | "qn"       | "mad"        | "mad"
+zinc     | "matheron" | "mad"        | "mad"
+lead     | "pooled"   | "ch"         | "mad"
+
+Worse estimator
+
+Variable | Range      | Partial sill | Nugget 
+-------- | ---------- | ------------ | ----------
+chromium | "mad"      | "mad"        | "mad"
+copper   | "matheron" | "matheron"   | "matheron"
+zinc     | "mad"      | "matheron"   | "matheron"
+lead     | "mad"      | "matheron"   | "matheron"
+
+Estimator "matheron" produced the best guess of the nugget variance for the data
+with a longer tail. The variogram model fitted to this data has a nugget 
+variance larger than the partial sill. Robust estimators of the sample variogram
+produced guesses that underestimate the nugget variance, what indicates that 
+they may be too optimistic regarding the nugget variance when the data is
+non-normal. However, when the data had a normal distribution, robust estimators
+produced the best guesses of the nugget variance, "matheron" being the poorest
+method because it consistently guessed a nugget variance larger that the partial
+sill. Despite these differences, the estimated variogram model parameters are 
+not considerably different for all four estimators of the sample variogram.
+
+```{r,eval=FALSE}
+par(mfrow = c(2, 2))
+```
+
+```{r,eval=FALSE}
+# Setup data
+# meuse$z <- lm(log(cadmium) ~ sqrt(dist), meuse)$resid
+# meuse$z <- lm(log(copper) ~ sqrt(dist), meuse)$resid
+# meuse$z <- lm(log(zinc) ~ sqrt(dist), meuse)$resid
+meuse$z <- lm(log(lead) ~ sqrt(dist), meuse)$resid
+
+# Guess initial covariance parameters
+estimator <- c("qn", "mad", "matheron", "ch")
+icp <- sapply(
+  1:length(estimator), function (i)
+    vgmICP(z = meuse$z, coords = meuse[, 1:2], method = "a", plotit = T,
+           estimator = estimator[i], min.npairs = 19))
+estimator <- c(estimator, "pooled")
+icp <- cbind(icp, rowMeans(icp))
+colnames(icp) <- estimator
+estimator[which.max(icp["nugget", ])]
+estimator[which.max(icp["nugget", ] + icp["p_sill", ])]
+
+# Fit variogram model
+fit_georob <- list()
+for (i in 1:length(estimator)) {
+  fit_georob[[i]] <- georob::georob(
+    z ~ 1, data = meuse, locations = ~ x + y, variogram.model = "RMexp",
+    verbose = 0, tuning.psi = 1000,
+    param = c(variance = icp[2, i], nugget = icp[3, i], scale = icp[1, i]))
+}
+
+# Check estimated parameters
+est_par_georob <- sapply(1:length(estimator), function (i) 
+  round(fit_georob[[i]]$param, 4))[c(4, 1, 3),]
+colnames(est_par_georob) <- estimator
+round(icp, 4) 
+est_par_georob
+rbind(min = estimator[apply(abs(round(icp, 4) - est_par_georob), 1, which.min)],
+      max = estimator[apply(abs(round(icp, 4) - est_par_georob), 1, which.max)])
+round(icp, 4) - est_par_georob
+```
+
+### Partial conclusion
+
+Robust estimators of the sample variogram produced similar guesses of the 
+initial covariance parameters. In most cases, they outperformed the non-robust
+estimator of the sample variogram as measured by the closeness between guessed
+and estimated variogram model parameters. Because the estimated variogram model
+parameters are virtually the same irrespective of the estimator of the sample 
+variogram, we can assume that they accurately fit the data. Thus, we can 
+conclude that robust estimators of the sample variogram had a better performance
+for the `meuse` dataset. Because "qn" generaly produced "better looking" sample 
+variograms, specially close to the origin, and because it is the default option
+in the ***georob***-package, we can suggest it to be the default estimator of
+the sample variogram for guessing the initial covariance parameters.
+
+## jura dataset
+
+```{r,eval=FALSE}
+require(gstat)
+data(jura)
+```
+
+nugget: "matheron" "matheron" "matheron" "matheron"
+sill: "mad" "matheron" "matheron" "matheron"
+
+Best estimator
+
+Variable | Range      | Partial sill | Nugget 
+-------- | ---------- | ------------ | ----------
+Cd       | "qn"       | "mad"        | "mad"
+Cu       | "matheron" | "mad"        | "mad" 
+Zn       | "pooled"   | "mad"        | "mad"
+Pb       | NA         | "mad"        | "qn"      
+
+Worse estimator
+
+Variable | Range      | Partial sill | Nugget 
+-------- | ---------- | ------------ | ----------
+Cd       | "mad"      | "matheron"   | "matheron"
+Cu       | "ch"       | "matheron"   | "matheron"
+Zn       | "qn"       | "matheron"   | "matheron"
+Pb       | NA         | "matheron"   | "matheron"
+
+```{r,eval=FALSE}
+par(mfrow = c(2, 2))
+```
+
+```{r,eval=FALSE}
+# Setup data
+jura.pred$z <- lm(log(Cd) ~ Rock + Landuse, jura.pred)$resid # 1, 2, 4
+# jura.pred$z <- lm(log(Cu) ~ Rock + Landuse, jura.pred)$resid # 3
+# jura.pred$z <- lm(log(Zn) ~ Rock + Landuse, jura.pred)$resid # 1, 2, 3, 4
+# jura.pred$z <- lm(log(Pb) ~ Rock + Landuse, jura.pred)$resid # 3
+
+# Guess initial covariance parameters
+estimator <- c("qn", "mad", "matheron", "ch")
+icp <- sapply(
+  1:length(estimator), function (i)
+    vgmICP(z = jura.pred$z, coords = jura.pred[, 1:2], 
+           method = "a", plotit = T, 
+           estimator = estimator[i]))
+estimator <- c(estimator, "pooled")
+icp <- cbind(icp, rowMeans(icp))
+colnames(icp) <- estimator
+estimator[which.max(icp["nugget", ])]
+estimator[which.max(icp["nugget", ] + icp["p_sill", ])]
+
+# Fit variogram model
+fit_georob <- list()
+for (i in 1:length(estimator)) {
+  fit_georob[[i]] <- georob::georob(
+    z ~ 1, data = jura.pred, locations = ~ Xloc + Yloc, 
+    variogram.model = "RMexp", verbose = 0, tuning.psi = 1000,
+    param = c(variance = icp[2, i], nugget = icp[3, i], scale = icp[1, i]))
+}
+
+# Check estimated parameters
+est_par_georob <- sapply(1:length(estimator), function (i) 
+  round(fit_georob[[i]]$param, 4))[c(4, 1, 3),]
+colnames(est_par_georob) <- estimator
+round(icp, 4)
+est_par_georob
+rbind(min = estimator[apply(abs(round(icp, 4) - est_par_georob), 1, which.min)],
+      max = estimator[apply(abs(round(icp, 4) - est_par_georob), 1, which.max)])
+round(icp, 4) - est_par_georob
+```
+
+## Santa Maria dataset
+
+### min.npairs = 28
+
+
+
+```{r,eval=FALSE}
+load("~/projects/dnos-sm-rs/data/R/1stArticlePartI.rda")
+cal_data <- data.frame(
+  cal_data@coords, clay_sel$best_lm$residuals, orca_sel$best_lm$residuals, 
+  ecec_sel$best_lm$residuals)
+colnames(cal_data) <- c("x", "y", "clay", "orca", "ecec")
+```
+
+```{r, eval=FALSE}
+par(mfrow = c(2, 2))
+```
+
+```{r,eval=FALSE}
+# Setup data
+cal_data$z <- lm(clay ~ 1, cal_data)$resid # 1, 2, 4
+# cal_data$z <- lm(orca ~ 1, cal_data)$resid # 3
+# cal_data$z <- lm(ecec ~ 1, cal_data)$resid # 1, 2, 3, 4
+
+# Guess initial covariance parameters
+estimator <- c("qn", "mad", "matheron", "ch")
+icp <- sapply(
+  1:length(estimator), function (i)
+    vgmICP(z = cal_data$z, coords = cal_data[, 1:2], method = "a", plotit = T, 
+           estimator = estimator[i], min.npairs = 30))
+estimator <- c(estimator, "pooled")
+icp <- cbind(icp, rowMeans(icp))
+colnames(icp) <- estimator
+estimator[which.max(icp["nugget", ])]
+estimator[which.max(icp["nugget", ] + icp["p_sill", ])]
+
+# Fit variogram model
+fit_georob <- list()
+for (i in 1:length(estimator)) {
+  fit_georob[[i]] <- georob::georob(
+    z ~ 1, data = cal_data, locations = ~ x + y, 
+    variogram.model = "RMexp", verbose = 0, tuning.psi = 1,
+    param = c(variance = icp[2, i], nugget = icp[3, i], scale = icp[1, i]))
+}
+
+# Check estimated parameters
+est_par_georob <- sapply(1:length(estimator), function (i) 
+  round(fit_georob[[i]]$param, 4))[c(4, 1, 3),]
+colnames(est_par_georob) <- estimator
+round(icp, 4)
+est_par_georob
+rbind(min = estimator[apply(abs(round(icp, 4) - est_par_georob), 1, which.min)],
+      max = estimator[apply(abs(round(icp, 4) - est_par_georob), 1, which.max)])
+round(icp, 4) - est_par_georob
+```
+
+# 2) Method used to make the initial guess #####################################
+# We now test five method to make the initial guess:
+# a) Samuel-Rosa,
+# b) JianEtAl1996,
+# c) HiemstraEtAl2009,
+# d) DesassisEtAl2012, and
+# e) LarrondoEtAl2003.
+# Methods a and c use exponentially spaced lag classes, while methods b, d and e
+# use equidistant lag classes. Evaluation involves comparing the guesses made 
+# using each method for four soil variables contained in the meuse dataset
+# (cadmium, copper, zinc, and lead).
+# 
+# The results show that methods a, b, and c result in (virtually) the same
+# estimated of the covariance parameters, although producing different initial
+# guesses. Methods d and e result in errors during execution. These errors 
+# result from the nugget being estimated as zero. I do not know how georob
+# handles these errors, but the estimated covariance parameters usually are
+# significantly different from those estimated using methods a, b, and c. The
+# largest differences appear when the data has a longer tail.
+# 
+# Initial guesses provided by methods a and c seem to be closer to the estimated
+# covariance paramenters. Because method a is more elaborated, we follow with 
+# it in the next analysis.
+
+```{r,eval=FALSE}
+# meuse$z <- lm(log(cadmium) ~ sqrt(dist), meuse)$resid;hist(meuse$z)
+# meuse$z <- lm(log(copper) ~ sqrt(dist), meuse)$resid;hist(meuse$z)
+# meuse$z <- lm(log(zinc) ~ sqrt(dist), meuse)$resid;hist(meuse$z)
+# meuse$z <- lm(log(lead) ~ sqrt(dist), meuse)$resid;hist(meuse$z)
+method <- letters[1:5]
+icp <- sapply(1:length(method), function (i) 
+  vgmICP(z = meuse$z, coords = meuse[, c("x", "y")], method = method[i], 
+         cov.model = "Exp", min.npairs = 20))
+colnames(icp) <- method
+fit_georob <- lapply(1:length(method), function (i)
+  tmp <- georob::georob(
+    z ~ 1, data = meuse, locations = ~ x + y, variogram.model = "RMexp",
+    verbose = 2, tuning.psi = 2,
+    param = c(variance = icp[2, i], nugget = icp[3, i], scale = icp[1, i])))
+est_par_georob <- sapply(
+  1:length(method), function (i) round(fit_georob[[i]]$param, 4))[c(4, 1, 3),]
+colnames(est_par_georob) <- method
+round(icp, 4)
+est_par_georob
+```
+
+# 3) Evaluate the fitting function #############################################
+# We evaluate three fitting functions:
+# a) georob:georob,
+# b) geoR::likfit, and
+# c) gstat::fit.variogram.
+# The analysis includes comparing the estimated covariance parameters, and how
+# close the initial guess is to that.
+
+```{r,eval=FALSE}
+# meuse$z <- lm(log(cadmium) ~ sqrt(dist), meuse)$resid;hist(meuse$z)
+# meuse$z <- lm(log(copper) ~ sqrt(dist), meuse)$resid;hist(meuse$z)
+# meuse$z <- lm(log(zinc) ~ sqrt(dist), meuse)$resid;hist(meuse$z)
+# meuse$z <- lm(log(lead) ~ sqrt(dist), meuse)$resid;hist(meuse$z)
+geodata <- list(coords = meuse[, 1:2], data = meuse$z)
+vario <- gstat::variogram(
+  z ~ 1, data = meuse, locations = ~ x + y, 
+  boundaries = pedometrics::vgmLags(meuse[, 1:2]))
+icp <- unname(vgmICP(z = meuse$z, coords = meuse[, 1:2], cov.model = "Exp"))
+fit_georob <- georob::georob(
+    z ~ 1, data = meuse, locations = ~ x + y, variogram.model = "RMexp",
+    verbose = 2, tuning.psi = 2, 
+    param = c(variance = icp[2], nugget = icp[3], scale = icp[1]))
+fit_geor <- geoR::likfit(
+  geodata = geodata, lik.method = "REML", 
+  ini.cov.par = c(icp[2], icp[1]), nugget = icp[3])
+fit_gstat <- gstat::fit.variogram(
+  vario, gstat::vgm(psill = icp[2], "Exp", range = icp[1], nugget = icp[3]))
+
+# Compare estimated covariance parameters
+est_par_georob <- round(fit_georob$param[c(3, 1, 4)], 3)
+est_par_geor <- round(c(fit_geor$nugget, fit_geor$cov.pars), 3)
+est_par_gstat <- round(
+  c(fit_gstat$psill[1], fit_gstat$psill[2], fit_gstat$range[2]), 4)
+data.frame(
+  icp = round(rev(icp), 3), gstat = est_par_gstat, geor = est_par_geor, 
+  georob = est_par_georob, nongeorob = est_par_georob_non)
+# Plot variogram lines
+v <- georob::sample.variogram(
+  meuse$z, locations = meuse[, 1:2], 
+  lag.dist.def = pedometrics::vgmLags(meuse[, 1:2], 5))
+plot(v$lag.dist, v$gamma, ylim = c(0, max(v$gamma) * 1.5))
+lines(fit_georob)
+lines(fit_geor, col = "blue", max.dist = max(v$lag.dist))
+v <- gstat::variogramLine(fit_gstat, dist_vector = vario$dist)
+lines(spline(v$dist, v$gamma, method = "natural", n = 101), col = "green")
+icp_vgm <- gstat::variogramLine(
+  gstat::vgm(psill = icp[2], "Exp", range = icp[1], nugget = icp[3]),
+  dist_vector = vario$dist)
+lines(spline(icp_vgm$dist, icp_vgm$gamma, method = "natural", n = 101), 
+      col = "red")
+# Cross-validation
+cv_georob <- georob::cv(
+  fit_georob, method = "random", seed = 2001, ncores = 1, nset = 155,
+  verbose = 4, re.estimate = FALSE)
+set.seed(2001)
+cv_gstat <- gstat::krige.cv(
+  formula = z ~ 1, data = meuse, fit_gstat, nfold = 155, locations = ~ x + y)
+set.seed(2001)
+cv_geor <- xvalid(geodata, model = fit_geor, locations.xvalid = "all")
+cv_georob <- cv_georob$pred$pred - meuse$z
+cv_gstat <- cv_gstat$var1.pred - meuse$z
+cv_geor <- cv_geor$predicted - meuse$z
+data.frame(
+  me = apply(data.frame(cv_georob, cv_gstat, cv_geor), 2, mean),
+  mse = apply(data.frame(cv_georob^2, cv_gstat^2, cv_geor^2), 2, mean),
+  mae = apply(data.frame(abs(cv_georob), abs(cv_gstat), abs(cv_geor)), 2, mean))
+
+
+```
+
