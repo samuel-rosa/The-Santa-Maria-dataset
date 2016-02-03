@@ -411,7 +411,7 @@ system("d.rast.leg SOIL_25j")
 # SAVE FIGURES WITH AREA-CLASS SOIL MAPS #######################################
 # Use as boundary the basin estimated with the digital elevation models derived
 # from the contour lines plus the 30 m buffer (buffer_BASIN_10).
-system("r.mask -o buffer_BASIN_10")
+system("r.mask -o buffer_BASIN_10", ignore.stderr = TRUE)
 boundary <- readVECT6("buffer_BASIN_10")@bbox
 # SOIL_100
 map <- readRAST6("SOIL_100")
@@ -426,7 +426,7 @@ map@data[, 1] <- revalue(map@data[, 1], c("1" = "C1",
                                           "14" = "TBa-Rd"))
 color <- c(sibcs$colors[2], sibcs$colors[41], sibcs$colors[21],
             sibcs$colors[39], sibcs$colors[43])
-p1 <- spplot(map, main = "", col.regions = color, asp = 1)
+p1 <- sp::spplot(map, main = "", col.regions = color, asp = 1)
 names(p1$legend) <- "inside"
 p1$legend$inside$x <- 0.73
 p1$legend$inside$y <- 0.85
