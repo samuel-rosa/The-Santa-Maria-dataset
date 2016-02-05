@@ -426,7 +426,7 @@ map@data[, 1] <- revalue(map@data[, 1], c("1" = "C1",
                                           "14" = "TBa-Rd"))
 color <- c(sibcs$colors[2], sibcs$colors[41], sibcs$colors[21],
             sibcs$colors[39], sibcs$colors[43])
-p1 <- spplot(map, main = "", col.regions = color, asp = 1)
+p1 <- sp::spplot(map, main = "", col.regions = color, asp = 1)
 names(p1$legend) <- "inside"
 p1$legend$inside$x <- 0.73
 p1$legend$inside$y <- 0.85
