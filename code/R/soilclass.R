@@ -411,7 +411,7 @@ system("d.rast.leg SOIL_25j")
 # SAVE FIGURES WITH AREA-CLASS SOIL MAPS #######################################
 # Use as boundary the basin estimated with the digital elevation models derived
 # from the contour lines plus the 30 m buffer (buffer_BASIN_10).
-system("r.mask -o buffer_BASIN_10")
+system("r.mask -o buffer_BASIN_10", ignore.stderr = TRUE)
 boundary <- readVECT6("buffer_BASIN_10")@bbox
 # SOIL_100
 map <- readRAST6("SOIL_100")

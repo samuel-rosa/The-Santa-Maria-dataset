@@ -1,3 +1,12 @@
+system("r.composite red=RED_5 blue=BLUE_5 green=GREEN_5 out=rapideye_composite")
+limite <- raster::shapefile("~/projects/dnos-sm-rs/dnos-sm-rs-data/boundaries/dnos-limit-carta.shp")
+sp::proj4string(limite) <- sp::proj4string(pol)
+sublimite <- raster::shapefile("~/projects/dnos-sm-rs/dnos-sm-rs-data/boundaries/sub-dnos-limit-carta.shp")
+sp::proj4string(sublimite) <- sp::proj4string(pol)
+spgrass6::writeVECT6(limite, "manual_limit_carta")
+spgrass6::writeVECT6(sublimite, "manual_sublimit_carta")
+
+
 # DESCRIPTION ##################################################################
 # Analysis of the geological data available.
 # SETTINGS #####################################################################
