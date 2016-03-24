@@ -91,8 +91,9 @@ rm(tmp)
 
 # # Create GRASS GIS DBASE structure -------------------------------------------
 dbGRASS <- "~/dbGRASS"
-initGRASS(gisBase = "/usr/lib/grass64/", gisDbase = dbGRASS,
-          location = "dnos-sm-rs", mapset = "predictions", pid = Sys.getpid())
+spgrass6::initGRASS(
+  gisBase = "/usr/lib/grass64/", gisDbase = dbGRASS,
+  location = "dnos-sm-rs", mapset = "predictions", pid = Sys.getpid())
 writeRAST6(dnos_raster, "dnos.raster")
 system("g.region rast=dnos.raster")
 spgrass6::gmeta6()

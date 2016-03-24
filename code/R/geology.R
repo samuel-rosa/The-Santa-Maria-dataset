@@ -26,9 +26,10 @@ load("sm-dnos-geology.RData")
 load("sm-dnos-general.RData")
 ls()
 # GRASS GIS
-initGRASS(gisBase = "/usr/lib/grass64/", gisDbase = GRASSgisDbase,
-          override = TRUE, location = "dnos-sm-rs", mapset = "predictions", 
-          pid = Sys.getpid())
+spgrass6::initGRASS(
+  gisBase = "/usr/lib/grass64/", gisDbase = dbGRASS, override = TRUE, location = "dnos-sm-rs", 
+  mapset = "predictions", pid = Sys.getpid())
+
 # Geology 1:50,000 =============================================================
 GEO_50 <- shapefile(paste(geo.dir, "geology50.shp", sep = ""))
 GEO_50$formation <- as.factor(GEO_50$formation)
@@ -49,9 +50,9 @@ plot(GEO_50)
 getRMSE(affine.geo50)
 
 # export to GRASS GIS (mapset = predictions)
-initGRASS(gisBase = "/usr/lib/grass64/", gisDbase = GRASSgisDbase,
-          override = TRUE, location = "dnos-sm-rs", mapset = "predictions", 
-          pid = Sys.getpid())
+spgrass6::initGRASS(
+  gisBase = "/usr/lib/grass64/", gisDbase = path.expand("~/dbGRASS"), override = TRUE, 
+  location = "dnos-sm-rs", mapset = "predictions", pid = Sys.getpid())
 system("g.region rast=dnos.raster")
 writeVECT6(GEO_50, "GEO_50", v.in.ogr_flags = "overwrite")
 system("v.info -c GEO_50")
