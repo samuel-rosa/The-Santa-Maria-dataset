@@ -23,3 +23,4 @@ GRAVEL;Percentage;Gravel.
 CANOPY;Dimensionless;Canopy.
 DATE;Dimensionless;Date of observation.
 TEAM;Dimensionless;Researchers that carried out the field campaign.
+NOTE;Dimensionless;Note regarding any data change/correction.
