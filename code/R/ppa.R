@@ -429,7 +429,7 @@ xyplot(dnos_near$all$near ~ c(1:length(dnos_near$all$day)),
        sub = "Solid line = rolling mean (k = 34); Dashed line = polynomial fit",
        panel = function(x, y) {
          panel.xyplot(x, y)
-         panel.lines(rollmean(x = dnos_near$all$near, k = 34), col = "black")
+         panel.lines(zoo::rollmean(x = dnos_near$all$near, k = 34), col = "black")
          panel.lines(predict(poly_fit), col = "black", lty = 2)
          panel.text(0, max(dnos_near$all$near), pos = 4,
                     labels = paste("r(1) = ", auto_cor, sep = ""))
