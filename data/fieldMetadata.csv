@@ -12,6 +12,7 @@ sampleArea;Square meters;Spatial support.
 sampleThickness;Meters;Thickness of horizons or vertical support.
 LAND;Dimensionless;Land use.
 PARENT;Dimensionless;Parent material.
+PARENTfixed;Dimensionless;Correction of parent material descriptions as indicated by exploratory data analysis made on March 2016.
 GEO;Dimensionless;Geological formation.
 LITHO;Dimensionless;Lithology.
 TAXON;Dimensionless;Soil taxon according to the Brazilian System of Soil Classification, version 2013.
