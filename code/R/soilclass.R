@@ -14,7 +14,6 @@ gc()
 require(sp)
 require(raster)
 require(rgdal)
-require(spgrass6)
 require(rpart)
 library(plyr)
 library(lattice)
@@ -27,9 +26,9 @@ load("/home/alessandro/PROJECTS/pedometrics/pedometrics/cooking/color_ramps.RDat
 ls()
 
 # GRASS GIS
-initGRASS(gisBase = "/usr/lib/grass64/", gisDbase = GRASSgisDbase,
-          override = TRUE, location = "dnos-sm-rs",
-          mapset = "predictions", pid = Sys.getpid())
+spgrass7::initGRASS(
+  gisBase = "/usr/lib/grass72/", gisDbase = path.expand('~/dbGRASS'), override = TRUE, 
+  location = "dnos-sm-rs", mapset = "predictions", pid = Sys.getpid())
 system("g.region rast=dnos.raster")
 
 # LOAD AND PREPROCESS DATA #####################################################
