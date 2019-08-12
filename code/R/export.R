@@ -1,12 +1,20 @@
+library(sf)
+library(magrittr)
+library(dplyr)
+
+# Point soil observations: soildata and soilsamples
+soildata <- febr::febr(
+  dataset = "ctb0003", merge = TRUE, variable = "all", 
+  standardization = list(repetition =  "combine", crs = "EPSG:4674"))
+febr::febr2xlsx(soildata, file = path.expand("~/oCloud/dnos-sm-rs/vector/soildata.xlsx"))
+write.table(
+  soildata[[2]], file = path.expand("~/oCloud/dnos-sm-rs/vector/soilsamples.csv"), sep = "\tab", 
+  row.names = FALSE, dec = ",")
+
 # Initiate GRASS GIS
 rgrass7::initGRASS(
   gisBase = "/usr/lib/grass76/", gisDbase = path.expand("~/dbGRASS"), location = "dnos-sm-rs", 
   mapset = "predictions", pid = Sys.getpid(), override = TRUE)
-
-# library(sp)
-library(sf)
-library(magrittr)
-library(dplyr)
 
 # Base data
 basin <- 
@@ -95,7 +103,7 @@ tmp %>%
   sf::st_intersection(., full_hull) %>% 
   sf::st_transform(crs = 4674) %>%
   dplyr::select(-cat, -Id) %>% 
-  # dplyr::filter(!sf::st_geometry_type(.) == "GEOMETRYCOLLECTION") %>% 
+  # dplyr::filter(sf::st_geometry_type(.) == "GEOMETRYCOLLECTION") %>%
   write_sf(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/landuse2009.geojson", delete_dsn = TRUE,
     layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Land use map of the year 2009. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
