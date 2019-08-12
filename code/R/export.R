@@ -98,14 +98,27 @@ rgrass7::readVECT(vname = "SOIL_25") %>%
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology25k.geojson", 
     layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Pedological map published at a cartographic scale of 1:100.000. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
 
+# topodata
 topodata(
-  sheet = "29S54_",  
-  # cutline = "/home/alessandro/oCloud/dnos-sm-rs/vector/basin10plus30m.geojson",
-  destfolder = "/home/alessandro/oCloud/dnos-sm-rs/raster", load = FALSE)
-gdalUtils::gdalwarp(srcfile = "/home/alessandro/oCloud/dnos-sm-rs/raster/29S54_DD.tif",
-                    dstfile = "/home/alessandro/oCloud/dnos-sm-rs/raster/29S54_DD_CUT.tif", 
-                    s_srs = "EPSG:4674", t_srs = "EPSG:4674", dstalpha = TRUE,
-                    crop_to_cutline = TRUE, co = "COMPRESS=DEFLATE",
-                    wo = c("CUTLINE_ALL_TOUCHED=TRUE", "NUM_THREADS=ALL_CPUS", "OPTIMIZE_SIZE=TRUE"),
-                    cutline = "/home/alessandro/oCloud/dnos-sm-rs/vector/basin10plus30m.geojson")
-system("g.list vector")
+  sheet = "29S54_", layer = "all", destfolder = path.expand("~/oCloud/dnos-sm-rs/raster"))
+topodata_files <- list.files(path.expand("~/oCloud/dnos-sm-rs/raster"), full.names = TRUE)
+for (i in topodata_files) {
+  gdalUtils::gdalwarp(
+    srcfile = i,
+    dstfile = gsub(pattern = ".tif", replacement = "_CUT.tif", i),
+    s_srs = "EPSG:4674", t_srs = "EPSG:4674",
+    crop_to_cutline = TRUE, co = "COMPRESS=DEFLATE",
+    wo = c("CUTLINE_ALL_TOUCHED=TRUE", "NUM_THREADS=ALL_CPUS", "OPTIMIZE_SIZE=TRUE"),
+    cutline = path.expand("~/oCloud/dnos-sm-rs/vector/basin10plus30m.geojson"))
+  file.remove(i)
+  file.rename(
+    from = gsub(pattern = ".tif", replacement = "_CUT.tif", i),
+    to = gsub("_CUT.tif", ".tif", gsub(pattern = ".tif", replacement = "_CUT.tif", i)))
+}
+# gdalUtils::gdalwarp(srcfile = "/home/alessandro/oCloud/dnos-sm-rs/raster/29S54_DD.tif",
+#                     dstfile = "/home/alessandro/oCloud/dnos-sm-rs/raster/29S54_DD_CUT.tif", 
+#                     s_srs = "EPSG:4674", t_srs = "EPSG:4674", dstalpha = TRUE,
+#                     crop_to_cutline = TRUE, co = "COMPRESS=DEFLATE",
+#                     wo = c("CUTLINE_ALL_TOUCHED=TRUE", "NUM_THREADS=ALL_CPUS", "OPTIMIZE_SIZE=TRUE"),
+#                     cutline = "/home/alessandro/oCloud/dnos-sm-rs/vector/basin10plus30m.geojson")
+# system("g.list vector")
