@@ -132,23 +132,14 @@ rgrass7::readVECT(vname = "SOIL_25") %>%
 topodata(
   sheet = "29S54_", layer = "all", destfolder = path.expand("~/oCloud/dnos-sm-rs/raster"))
 topodata_files <- list.files(path.expand("~/oCloud/dnos-sm-rs/raster"), full.names = TRUE)
+projwin <- path.expand("~/oCloud/dnos-sm-rs/vector/fullhull.geojson") %>% sf::st_read() %>% sf::st_bbox()
 for (i in topodata_files) {
-  gdalUtils::gdalwarp(
-    srcfile = i,
-    dstfile = gsub(pattern = ".tif", replacement = "_CUT.tif", i),
-    s_srs = "EPSG:4674", t_srs = "EPSG:4674",
-    crop_to_cutline = TRUE, co = "COMPRESS=DEFLATE",
-    wo = c("CUTLINE_ALL_TOUCHED=TRUE", "NUM_THREADS=ALL_CPUS", "OPTIMIZE_SIZE=TRUE"),
-    cutline = path.expand("~/oCloud/dnos-sm-rs/vector/basin10plus30m.geojson"))
+  gdalUtils::gdal_translate(
+    src_dataset = i, 
+    dst_dataset = gsub(pattern = ".tif", replacement = "_CUT.tif", i), 
+    projwin = projwin[c(1, 4, 3, 2)], co = "COMPRESS=DEFLATE")
   file.remove(i)
   file.rename(
     from = gsub(pattern = ".tif", replacement = "_CUT.tif", i),
     to = gsub("_CUT.tif", ".tif", gsub(pattern = ".tif", replacement = "_CUT.tif", i)))
 }
-# gdalUtils::gdalwarp(srcfile = "/home/alessandro/oCloud/dnos-sm-rs/raster/29S54_DD.tif",
-#                     dstfile = "/home/alessandro/oCloud/dnos-sm-rs/raster/29S54_DD_CUT.tif", 
-#                     s_srs = "EPSG:4674", t_srs = "EPSG:4674", dstalpha = TRUE,
-#                     crop_to_cutline = TRUE, co = "COMPRESS=DEFLATE",
-#                     wo = c("CUTLINE_ALL_TOUCHED=TRUE", "NUM_THREADS=ALL_CPUS", "OPTIMIZE_SIZE=TRUE"),
-#                     cutline = "/home/alessandro/oCloud/dnos-sm-rs/vector/basin10plus30m.geojson")
-# system("g.list vector")
