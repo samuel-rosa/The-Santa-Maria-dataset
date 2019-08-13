@@ -8,8 +8,8 @@ soildata <- febr::febr(
   standardization = list(repetition =  "combine", crs = "EPSG:4674"))
 febr::febr2xlsx(soildata, file = path.expand("~/oCloud/dnos-sm-rs/vector/soildata.xlsx"))
 write.table(
-  soildata[[2]], file = path.expand("~/oCloud/dnos-sm-rs/vector/soilsamples.csv"), sep = "\tab", 
-  row.names = FALSE, dec = ",")
+  soildata[[2]], file = path.expand("~/oCloud/dnos-sm-rs/vector/soilsamples.csv"), sep = ",", 
+  row.names = FALSE)
 
 # Initiate GRASS GIS
 rgrass7::initGRASS(
@@ -35,36 +35,32 @@ full_hull <-
 full_hull %>% 
   sf::st_transform(crs = 4674) %>% 
   sf::st_write(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/fullhull.geojson", delete_dsn = TRUE,
-    layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Convex hull of the DNOS basin and soil observation points. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/fullhull.shp", delete_dsn = TRUE)
 
 # basin10plus30m.geojson
 rgrass7::readVECT(vname = "buffer_BASIN_10") %>% 
   sf::st_as_sf() %>% 
   sf::st_transform(crs = 4674) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/basin10plus30m.geojson", delete_dsn = TRUE,
-    layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Boundary of the DNOS basin computed with r.watershed using a 5-m resolution DEM derived from 10-m equidistant contour lines, later added a buffer of 30 m to compensate for positional errors of the source elevation data. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/basin10plus30m.shp", delete_dsn = TRUE)
 
 # geology25k
 rgrass7::readVECT(vname = "GEO_25") %>% 
   sf::st_as_sf() %>% 
   sf::st_intersection(., full_hull) %>% 
   sf::st_transform(crs = 4674) %>% 
-  dplyr::select(-cat, -id) %>% 
+    dplyr::select(-cat, -id) %>% 
   sf::write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/geology25k.geojson", delete_dsn = TRUE,
-    layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Geological map published at a cartographic scale of 1:25.000. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/geology25k.shp", delete_dsn = TRUE)
 
 # geology50k
 rgrass7::readVECT(vname = "GEO_50") %>% 
   sf::st_as_sf() %>% 
   sf::st_intersection(., full_hull) %>% 
   sf::st_transform(crs = 4674) %>% 
-  dplyr::select(-cat, -id) %>% 
+    dplyr::select(-cat, -id) %>% 
   sf::write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/geology50k.geojson", delete_dsn = TRUE,
-    layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Geological map published at a cartographic scale of 1:50.000. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/geology50k.shp", delete_dsn = TRUE)
 
 # deposits25k
 rgrass7::readVECT(vname = "DEP_25") %>% 
@@ -73,8 +69,7 @@ rgrass7::readVECT(vname = "DEP_25") %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/deposits25k.geojson", delete_dsn = TRUE,
-    layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Map of quaternary deposits published at a cartographic scale of 1:25.000. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/deposits25k.shp", delete_dsn = TRUE)
 
 # landuse1980
 tmp <- rgrass7::readVECT(vname = "LU1980")
@@ -88,8 +83,8 @@ tmp %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/landuse1980.geojson", delete_dsn = TRUE,
-    layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Land use map of the year of 1980. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/landuse1980.shp", delete_dsn = TRUE)
+rm(tmp)
 
 # landuse2009
 tmp <- rgrass7::readVECT(vname = "LU2009", with_c = TRUE)
@@ -101,12 +96,11 @@ tmp %>%
   sf::st_as_sf() %>% 
   dplyr::filter(!is.na(land_use)) %>% 
   sf::st_intersection(., full_hull) %>% 
-  sf::st_transform(crs = 4674) %>%
+  sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -Id) %>% 
-  # dplyr::filter(sf::st_geometry_type(.) == "GEOMETRYCOLLECTION") %>%
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/landuse2009.geojson", delete_dsn = TRUE,
-    layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Land use map of the year 2009. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/landuse2009.shp", delete_dsn = TRUE)
+rm(tmp)
 
 # pedology100k
 rgrass7::readVECT(vname = "SOIL_100") %>% 
@@ -115,8 +109,7 @@ rgrass7::readVECT(vname = "SOIL_100") %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology100k.geojson", delete_dsn = TRUE, 
-    layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Pedological map published at a cartographic scale of 1:100.000. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology100k.shp", delete_dsn = TRUE)
 
 # pedology25k
 rgrass7::readVECT(vname = "SOIL_25") %>% 
@@ -125,19 +118,19 @@ rgrass7::readVECT(vname = "SOIL_25") %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -Id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology25k.geojson", delete_dsn = TRUE,
-    layer_options = c("WRITE_BBOX=YES", "DESCRIPTION=Pedological map published at a cartographic scale of 1:100.000. Coordinate Reference System: EPSG:4674 (SIRGAS 2000)"))
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology25k.shp", delete_dsn = TRUE)
 
 # topodata
 topodata(
   sheet = "29S54_", layer = "all", destfolder = path.expand("~/oCloud/dnos-sm-rs/raster"))
 topodata_files <- list.files(path.expand("~/oCloud/dnos-sm-rs/raster"), full.names = TRUE)
-projwin <- path.expand("~/oCloud/dnos-sm-rs/vector/fullhull.geojson") %>% sf::st_read() %>% sf::st_bbox()
+te <- path.expand("~/oCloud/dnos-sm-rs/vector/fullhull.shp") %>% sf::st_read() %>% sf::st_bbox()
 for (i in topodata_files) {
-  gdalUtils::gdal_translate(
-    src_dataset = i, 
-    dst_dataset = gsub(pattern = ".tif", replacement = "_CUT.tif", i), 
-    projwin = projwin[c(1, 4, 3, 2)], co = "COMPRESS=DEFLATE")
+  gdalUtils::gdalwarp(
+    srcfile = i, s_srs = "EPSG:4326",
+    dstfile = gsub(pattern = ".tif", replacement = "_CUT.tif", i), t_srs = "EPSG:4674", 
+    co = "COMPRESS=DEFLATE", #cutline = path.expand("~/oCloud/dnos-sm-rs/vector/fullhull.shp"), 
+    te = te, te_srs = "EPSG:4674")
   file.remove(i)
   file.rename(
     from = gsub(pattern = ".tif", replacement = "_CUT.tif", i),
