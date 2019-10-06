@@ -5,7 +5,7 @@ library(dplyr)
 # Point soil observations: soildata and soilsamples
 soildata <- febr::febr(
   dataset = "ctb0003", merge = TRUE, variable = "all", 
-  standardization = list(repetition =  "combine", crs = "EPSG:4674"))
+  standardization = list(crs = "EPSG:4674"))
 febr::febr2xlsx(soildata, file = path.expand("~/oCloud/dnos-sm-rs/vector/soildata.xlsx"))
 write.table(
   soildata[[2]], file = path.expand("~/oCloud/dnos-sm-rs/vector/soilsamples.csv"), sep = ",", 
@@ -37,7 +37,7 @@ full_hull %>%
   sf::st_write(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/fullhull.shp", delete_dsn = TRUE)
 
-# basin10plus30m.geojson
+# basin10plus30m
 rgrass7::readVECT(vname = "buffer_BASIN_10") %>% 
   sf::st_as_sf() %>% 
   sf::st_transform(crs = 4674) %>% 
@@ -120,6 +120,15 @@ rgrass7::readVECT(vname = "SOIL_25") %>%
   write_sf(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology25k.shp", delete_dsn = TRUE)
 
+# faults50k
+rgrass7::readVECT(vname = "FAU_50") %>% 
+  sf::st_as_sf() %>% 
+  sf::st_intersection(., full_hull) %>% 
+  sf::st_transform(crs = 4674) %>% 
+  dplyr::select(-cat, -id) %>% 
+  write_sf(
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/faults50k.shp", delete_dsn = TRUE)
+
 # topodata
 topodata(
   sheet = "29S54_", layer = "all", destfolder = path.expand("~/oCloud/dnos-sm-rs/raster"))
@@ -129,10 +138,11 @@ for (i in topodata_files) {
   gdalUtils::gdalwarp(
     srcfile = i, s_srs = "EPSG:4326",
     dstfile = gsub(pattern = ".tif", replacement = "_CUT.tif", i), t_srs = "EPSG:4674", 
-    co = "COMPRESS=DEFLATE", #cutline = path.expand("~/oCloud/dnos-sm-rs/vector/fullhull.shp"), 
-    te = te, te_srs = "EPSG:4674")
+    co = "COMPRESS=DEFLATE", te = te, te_srs = "EPSG:4674")
   file.remove(i)
   file.rename(
     from = gsub(pattern = ".tif", replacement = "_CUT.tif", i),
     to = gsub("_CUT.tif", ".tif", gsub(pattern = ".tif", replacement = "_CUT.tif", i)))
 }
+
+
