@@ -15,8 +15,10 @@ write.table(
 rgrass7::initGRASS(
   gisBase = "/usr/lib/grass76/", gisDbase = path.expand("~/dbGRASS"), location = "dnos-sm-rs", 
   mapset = "predictions", pid = Sys.getpid(), override = TRUE)
+system("g.region rast=dnos.raster")
+system("r.mask -r")
 
-# Base data
+## Base data
 basin <- 
   rgrass7::readVECT(vname = "buffer_BASIN_10") %>% 
   sf::st_as_sf()
@@ -31,20 +33,22 @@ full_hull <-
   sf::st_convex_hull() %>% 
   sf::st_union(basin)
 
-# fullhull
+## fullhull
 full_hull %>% 
   sf::st_transform(crs = 4674) %>% 
   sf::st_write(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/fullhull.shp", delete_dsn = TRUE)
 
-# basin10plus30m
+## basin10plus30m
 rgrass7::readVECT(vname = "buffer_BASIN_10") %>% 
   sf::st_as_sf() %>% 
   sf::st_transform(crs = 4674) %>% 
   write_sf(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/basin10plus30m.shp", delete_dsn = TRUE)
 
-# geology25k
+# Vector data
+
+## geology25k
 rgrass7::readVECT(vname = "GEO_25") %>% 
   sf::st_as_sf() %>% 
   sf::st_intersection(., full_hull) %>% 
@@ -53,7 +57,7 @@ rgrass7::readVECT(vname = "GEO_25") %>%
   sf::write_sf(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/geology25k.shp", delete_dsn = TRUE)
 
-# geology50k
+## geology50k
 rgrass7::readVECT(vname = "GEO_50") %>% 
   sf::st_as_sf() %>% 
   sf::st_intersection(., full_hull) %>% 
@@ -62,7 +66,7 @@ rgrass7::readVECT(vname = "GEO_50") %>%
   sf::write_sf(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/geology50k.shp", delete_dsn = TRUE)
 
-# deposits25k
+## deposits25k
 rgrass7::readVECT(vname = "DEP_25") %>% 
   sf::st_as_sf() %>% 
   sf::st_intersection(., full_hull) %>% 
@@ -71,7 +75,7 @@ rgrass7::readVECT(vname = "DEP_25") %>%
   write_sf(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/deposits25k.shp", delete_dsn = TRUE)
 
-# landuse1980
+## landuse1980
 tmp <- rgrass7::readVECT(vname = "LU1980")
 tmp %>% 
   slot("polygons") %>% 
@@ -86,7 +90,7 @@ tmp %>%
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/landuse1980.shp", delete_dsn = TRUE)
 rm(tmp)
 
-# landuse2009
+## landuse2009
 tmp <- rgrass7::readVECT(vname = "LU2009", with_c = TRUE)
 tmp %>%
   slot("polygons") %>%
@@ -102,7 +106,7 @@ tmp %>%
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/landuse2009.shp", delete_dsn = TRUE)
 rm(tmp)
 
-# pedology100k
+## pedology100k
 rgrass7::readVECT(vname = "SOIL_100") %>% 
   sf::st_as_sf() %>% 
   sf::st_intersection(., full_hull) %>% 
@@ -111,7 +115,7 @@ rgrass7::readVECT(vname = "SOIL_100") %>%
   write_sf(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology100k.shp", delete_dsn = TRUE)
 
-# pedology25k
+## pedology25k
 rgrass7::readVECT(vname = "SOIL_25") %>% 
   sf::st_as_sf() %>% 
   sf::st_intersection(., full_hull) %>% 
@@ -120,7 +124,7 @@ rgrass7::readVECT(vname = "SOIL_25") %>%
   write_sf(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology25k.shp", delete_dsn = TRUE)
 
-# faults50k
+## faults50k
 rgrass7::readVECT(vname = "FAU_50") %>% 
   sf::st_as_sf() %>% 
   sf::st_intersection(., full_hull) %>% 
@@ -129,7 +133,26 @@ rgrass7::readVECT(vname = "FAU_50") %>%
   write_sf(
     dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/faults50k.shp", delete_dsn = TRUE)
 
-# topodata
+## stream10m
+rgrass7::readVECT(vname = "STREAM_10") %>% 
+  sf::st_as_sf() %>% 
+  sf::st_intersection(., full_hull) %>% 
+  sf::st_transform(crs = 4674) %>% 
+  dplyr::select(-cat) %>% 
+  write_sf(
+    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/stream10m.shp", delete_dsn = TRUE)
+
+## lakes25k
+rgrass7::readVECT(vname = "lakes25") %>% 
+  sf::st_as_sf() %>% 
+  sf::st_intersection(., full_hull) %>% 
+  sf::st_transform(crs = 4674) %>% 
+  dplyr::select(-cat) %>% 
+  write_sf(dsn = "~/oCloud/dnos-sm-rs/vector/lakes25k.shp", delete_dsn = TRUE)
+
+# Raster files
+
+## topodata
 topodata(
   sheet = "29S54_", layer = "all", destfolder = path.expand("~/oCloud/dnos-sm-rs/raster"))
 topodata_files <- list.files(path.expand("~/oCloud/dnos-sm-rs/raster"), full.names = TRUE)
@@ -144,5 +167,34 @@ for (i in topodata_files) {
     from = gsub(pattern = ".tif", replacement = "_CUT.tif", i),
     to = gsub("_CUT.tif", ".tif", gsub(pattern = ".tif", replacement = "_CUT.tif", i)))
 }
+dem <- raster::raster('~/oCloud/dnos-sm-rs/raster/ZN_29S54_.tif')
 
+extent <- full_hull %>% sf::st_transform(crs = 4674) %>% sf::as_Spatial() %>% raster::extent()
 
+## landsat5blue
+rgrass7::readRAST(vname = 'BLUE_30') %>% 
+  raster::raster() %>% 
+  raster::projectRaster(to = dem) %>% 
+  raster::crop(y = extent) %>% 
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5blue.tif", overwrite = TRUE)
+
+## landsat5green
+rgrass7::readRAST(vname = 'GREEN_30') %>% 
+  raster::raster() %>% 
+  raster::projectRaster(to = dem) %>% 
+  raster::crop(y = extent) %>% 
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5green.tif", overwrite = TRUE)
+
+## landsat5red
+rgrass7::readRAST(vname = 'RED_30') %>% 
+  raster::raster() %>% 
+  raster::projectRaster(to = dem) %>% 
+  raster::crop(y = extent) %>% 
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5red.tif", overwrite = TRUE)
+
+## landsat5mir
+rgrass7::readRAST(vname = 'MIR_30') %>% 
+  raster::raster() %>% 
+  raster::projectRaster(to = dem) %>% 
+  raster::crop(y = extent) %>% 
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5mir.tif", overwrite = TRUE)
