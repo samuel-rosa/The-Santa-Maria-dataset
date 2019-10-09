@@ -16,7 +16,7 @@ rgrass7::initGRASS(
   gisBase = "/usr/lib/grass76/", gisDbase = path.expand("~/dbGRASS"), location = "dnos-sm-rs", 
   mapset = "predictions", pid = Sys.getpid(), override = TRUE)
 system("g.region rast=dnos.raster")
-system("r.mask -r")
+# system("r.mask -r")
 
 ## Base data
 basin <- 
@@ -37,14 +37,14 @@ full_hull <-
 full_hull %>% 
   sf::st_transform(crs = 4674) %>% 
   sf::st_write(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/fullhull.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/fullhull.shp", delete_dsn = TRUE)
 
 ## basin10plus30m
 rgrass7::readVECT(vname = "buffer_BASIN_10") %>% 
   sf::st_as_sf() %>% 
   sf::st_transform(crs = 4674) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/basin10plus30m.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/basin10plus30m.shp", delete_dsn = TRUE)
 
 # Vector data
 
@@ -55,7 +55,7 @@ rgrass7::readVECT(vname = "GEO_25") %>%
   sf::st_transform(crs = 4674) %>% 
     dplyr::select(-cat, -id) %>% 
   sf::write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/geology25k.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/geology25k.shp", delete_dsn = TRUE)
 
 ## geology50k
 rgrass7::readVECT(vname = "GEO_50") %>% 
@@ -64,7 +64,7 @@ rgrass7::readVECT(vname = "GEO_50") %>%
   sf::st_transform(crs = 4674) %>% 
     dplyr::select(-cat, -id) %>% 
   sf::write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/geology50k.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/geology50k.shp", delete_dsn = TRUE)
 
 ## deposits25k
 rgrass7::readVECT(vname = "DEP_25") %>% 
@@ -73,7 +73,7 @@ rgrass7::readVECT(vname = "DEP_25") %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/deposits25k.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/deposits25k.shp", delete_dsn = TRUE)
 
 ## landuse1980
 tmp <- rgrass7::readVECT(vname = "LU1980")
@@ -87,7 +87,7 @@ tmp %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/landuse1980.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/landuse1980.shp", delete_dsn = TRUE)
 rm(tmp)
 
 ## landuse2009
@@ -103,7 +103,7 @@ tmp %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -Id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/landuse2009.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/landuse2009.shp", delete_dsn = TRUE)
 rm(tmp)
 
 ## pedology100k
@@ -113,7 +113,7 @@ rgrass7::readVECT(vname = "SOIL_100") %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology100k.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/pedology100k.shp", delete_dsn = TRUE)
 
 ## pedology25k
 rgrass7::readVECT(vname = "SOIL_25") %>% 
@@ -122,7 +122,7 @@ rgrass7::readVECT(vname = "SOIL_25") %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -Id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/pedology25k.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/pedology25k.shp", delete_dsn = TRUE)
 
 ## faults50k
 rgrass7::readVECT(vname = "FAU_50") %>% 
@@ -131,7 +131,7 @@ rgrass7::readVECT(vname = "FAU_50") %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat, -id) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/faults50k.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/faults50k.shp", delete_dsn = TRUE)
 
 ## stream10m
 rgrass7::readVECT(vname = "STREAM_10") %>% 
@@ -140,7 +140,7 @@ rgrass7::readVECT(vname = "STREAM_10") %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat) %>% 
   write_sf(
-    dsn = "/home/alessandro/oCloud/dnos-sm-rs/vector/stream10m.shp", delete_dsn = TRUE)
+    dsn = "~/oCloud/dnos-sm-rs/vector/stream10m.shp", delete_dsn = TRUE)
 
 ## lakes25k
 rgrass7::readVECT(vname = "lakes25") %>% 
@@ -149,6 +149,13 @@ rgrass7::readVECT(vname = "lakes25") %>%
   sf::st_transform(crs = 4674) %>% 
   dplyr::select(-cat) %>% 
   write_sf(dsn = "~/oCloud/dnos-sm-rs/vector/lakes25k.shp", delete_dsn = TRUE)
+
+## contours25k
+sf::read_sf('~/projects/dnos-sm-rs/dnos-sm-rs-data/terrain/contours25-affine.shp') %>% 
+  sf::st_as_sf() %>% 
+  sf::st_intersection(., full_hull) %>% 
+  sf::st_transform(crs = 4674) %>% 
+  write_sf(dsn = "~/oCloud/dnos-sm-rs/vector/contours25k.shp", delete_dsn = TRUE)
 
 # Raster files
 
