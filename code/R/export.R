@@ -178,6 +178,20 @@ dem <- raster::raster('~/oCloud/dnos-sm-rs/raster/ZN_29S54_.tif')
 
 extent <- full_hull %>% sf::st_transform(crs = 4674) %>% sf::as_Spatial() %>% raster::extent()
 
+## landsat5nira
+rgrass7::readRAST(vname = 'NIR_30a') %>% 
+  raster::raster() %>% 
+  raster::projectRaster(to = dem) %>% 
+  raster::crop(y = extent) %>% 
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5nira.tif", overwrite = TRUE)
+
+## landsat5nirb
+rgrass7::readRAST(vname = 'NIR_30b') %>% 
+  raster::raster() %>% 
+  raster::projectRaster(to = dem) %>% 
+  raster::crop(y = extent) %>% 
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5nirb.tif", overwrite = TRUE)
+
 ## landsat5blue
 rgrass7::readRAST(vname = 'BLUE_30') %>% 
   raster::raster() %>% 
