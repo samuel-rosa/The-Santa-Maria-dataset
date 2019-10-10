@@ -43,8 +43,7 @@ full_hull %>%
 rgrass7::readVECT(vname = "buffer_BASIN_10") %>% 
   sf::st_as_sf() %>% 
   sf::st_transform(crs = 4674) %>% 
-  write_sf(
-    dsn = "~/oCloud/dnos-sm-rs/vector/basin10plus30m.shp", delete_dsn = TRUE)
+  write_sf(dsn = "~/oCloud/dnos-sm-rs/vector/basin10plus30m.shp", delete_dsn = TRUE)
 
 # Vector data
 
@@ -174,48 +173,46 @@ for (i in topodata_files) {
     from = gsub(pattern = ".tif", replacement = "_CUT.tif", i),
     to = gsub("_CUT.tif", ".tif", gsub(pattern = ".tif", replacement = "_CUT.tif", i)))
 }
-dem <- raster::raster('~/oCloud/dnos-sm-rs/raster/ZN_29S54_.tif')
-
 extent <- full_hull %>% sf::st_transform(crs = 4674) %>% sf::as_Spatial() %>% raster::extent()
 
-## landsat5nira
+## tm5nira
 rgrass7::readRAST(vname = 'NIR_30a') %>% 
   raster::raster() %>% 
-  raster::projectRaster(to = dem) %>% 
+  raster::projectRaster(crs = "+init=epsg:4674") %>% 
   raster::crop(y = extent) %>% 
-  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5nira.tif", overwrite = TRUE)
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/tm5nira.tif", overwrite = TRUE)
 
-## landsat5nirb
+## tm5nirb
 rgrass7::readRAST(vname = 'NIR_30b') %>% 
   raster::raster() %>% 
-  raster::projectRaster(to = dem) %>% 
+  raster::projectRaster(crs = "+init=epsg:4674") %>% 
   raster::crop(y = extent) %>% 
-  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5nirb.tif", overwrite = TRUE)
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/tm5nirb.tif", overwrite = TRUE)
 
-## landsat5blue
+## tm5blue
 rgrass7::readRAST(vname = 'BLUE_30') %>% 
   raster::raster() %>% 
-  raster::projectRaster(to = dem) %>% 
+  raster::projectRaster(crs = "+init=epsg:4674") %>% 
   raster::crop(y = extent) %>% 
-  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5blue.tif", overwrite = TRUE)
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/tm5blue.tif", overwrite = TRUE)
 
-## landsat5green
+## tm5green
 rgrass7::readRAST(vname = 'GREEN_30') %>% 
   raster::raster() %>% 
-  raster::projectRaster(to = dem) %>% 
+  raster::projectRaster(crs = "+init=epsg:4674") %>% 
   raster::crop(y = extent) %>% 
-  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5green.tif", overwrite = TRUE)
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/tm5green.tif", overwrite = TRUE)
 
-## landsat5red
+## tm5red
 rgrass7::readRAST(vname = 'RED_30') %>% 
   raster::raster() %>% 
-  raster::projectRaster(to = dem) %>% 
+  raster::projectRaster(crs = "+init=epsg:4674") %>% 
   raster::crop(y = extent) %>% 
-  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5red.tif", overwrite = TRUE)
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/tm5red.tif", overwrite = TRUE)
 
-## landsat5mir
+## tm5mir
 rgrass7::readRAST(vname = 'MIR_30') %>% 
   raster::raster() %>% 
-  raster::projectRaster(to = dem) %>% 
+  raster::projectRaster(crs = "+init=epsg:4674") %>% 
   raster::crop(y = extent) %>% 
-  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/landsat5mir.tif", overwrite = TRUE)
+  raster::writeRaster(filename = "~/oCloud/dnos-sm-rs/raster/tm5mir.tif", overwrite = TRUE)
